@@ -16,7 +16,7 @@ admin.initializeApp();
 export const helloWorld = onRequest((request, response) => {
   logger.info("Hello World function called", {structuredData: true});
   response.json({
-    message: "Hello from Firebase! test push",
+    message: "Hello from Firebase! magic deploy",
     timestamp: new Date().toISOString(),
     method: request.method,
   });
