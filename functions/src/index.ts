@@ -1,20 +1,20 @@
-import { onRequest, onCall } from "firebase-functions/v2/https";
+import {onRequest, onCall} from "firebase-functions/v2/https";
 import {
   onDocumentCreated,
   onDocumentUpdated,
 } from "firebase-functions/v2/firestore";
-import { onSchedule } from "firebase-functions/v2/scheduler";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
-import { messagingApi, validateSignature } from "@line/bot-sdk";
-import { google } from "googleapis";
+import {messagingApi, validateSignature} from "@line/bot-sdk";
+import {google} from "googleapis";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 admin.initializeApp();
 
 export const helloWorld = onRequest((request, response) => {
-  logger.info("Hello World function called", { structuredData: true });
+  logger.info("Hello World function called", {structuredData: true});
   response.json({
     message: "Hello from Firebase!",
     timestamp: new Date().toISOString(),
@@ -23,7 +23,7 @@ export const helloWorld = onRequest((request, response) => {
 });
 
 export const getUserData = onCall(async (request) => {
-  const { userId } = request.data;
+  const {userId} = request.data;
 
   if (!userId) {
     throw new Error("userId is required");
@@ -40,19 +40,19 @@ export const getUserData = onCall(async (request) => {
       throw new Error("User not found");
     }
 
-    logger.info("User data retrieved", { userId });
+    logger.info("User data retrieved", {userId});
     return {
       success: true,
       data: userDoc.data(),
     };
   } catch (error) {
-    logger.error("Error getting user data", { userId, error });
+    logger.error("Error getting user data", {userId, error});
     throw error;
   }
 });
 
 export const createUser = onCall(async (request) => {
-  const { email, name } = request.data;
+  const {email, name} = request.data;
 
   if (!email || !name) {
     throw new Error("Email and name are required");
@@ -69,14 +69,14 @@ export const createUser = onCall(async (request) => {
 
     await userRef.set(userData);
 
-    logger.info("User created", { userId: userRef.id, email });
+    logger.info("User created", {userId: userRef.id, email});
     return {
       success: true,
       userId: userRef.id,
       message: "User created successfully",
     };
   } catch (error) {
-    logger.error("Error creating user", { email, error });
+    logger.error("Error creating user", {email, error});
     throw error;
   }
 });
@@ -85,7 +85,7 @@ export const onUserCreated = onDocumentCreated("users/{userId}", (event) => {
   const userId = event.params.userId;
   const userData = event.data?.data();
 
-  logger.info("New user created trigger", { userId, userData });
+  logger.info("New user created trigger", {userId, userData});
 
   return admin
     .firestore()
@@ -103,7 +103,7 @@ export const onUserUpdated = onDocumentUpdated("users/{userId}", (event) => {
   const beforeData = event.data?.before.data();
   const afterData = event.data?.after.data();
 
-  logger.info("User updated trigger", { userId, beforeData, afterData });
+  logger.info("User updated trigger", {userId, beforeData, afterData});
 
   return admin
     .firestore()
@@ -140,15 +140,15 @@ export const dailyCleanup = onSchedule("0 2 * * *", async () => {
 
     await batch.commit();
 
-    logger.info("Daily cleanup completed", { deletedLogs: snapshot.size });
+    logger.info("Daily cleanup completed", {deletedLogs: snapshot.size});
   } catch (error) {
-    logger.error("Daily cleanup failed", { error });
+    logger.error("Daily cleanup failed", {error});
     throw error;
   }
 });
 
 export const sendNotification = onCall(async (request) => {
-  const { userId, title, body } = request.data;
+  const {userId, title, body} = request.data;
 
   if (!userId || !title || !body) {
     throw new Error("userId, title, and body are required");
@@ -190,10 +190,10 @@ export const sendNotification = onCall(async (request) => {
       sentAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    logger.info("Notification sent", { userId, messageId: response });
-    return { success: true, messageId: response };
+    logger.info("Notification sent", {userId, messageId: response});
+    return {success: true, messageId: response};
   } catch (error) {
-    logger.error("Error sending notification", { userId, error });
+    logger.error("Error sending notification", {userId, error});
     throw error;
   }
 });
@@ -226,7 +226,7 @@ async function appendToGoogleSheet(data: LineMessage): Promise<void> {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    const sheets = google.sheets({ version: "v4", auth });
+    const sheets = google.sheets({version: "v4", auth});
 
     const values = [
       [
@@ -248,9 +248,9 @@ async function appendToGoogleSheet(data: LineMessage): Promise<void> {
       },
     });
 
-    logger.info("Data appended to Google Sheet", { messageId: data.messageId });
+    logger.info("Data appended to Google Sheet", {messageId: data.messageId});
   } catch (error) {
-    logger.error("Error appending to Google Sheet", { error });
+    logger.error("Error appending to Google Sheet", {error});
     throw error;
   }
 }
@@ -269,7 +269,7 @@ async function getUserDisplayName(userId: string): Promise<string> {
     const profile = await lineClient.getProfile(userId);
     return profile.displayName;
   } catch (error) {
-    logger.error("Error getting user profile", { userId, error });
+    logger.error("Error getting user profile", {userId, error});
     return "Unknown User";
   }
 }
@@ -297,29 +297,29 @@ export const lineWebhook = onRequest(async (request, response) => {
         const messageType = event.message.type;
 
         switch (event.message.type) {
-          case "text":
-            message = event.message.text;
-            break;
-          case "image":
-            message = "Image sent";
-            break;
-          case "video":
-            message = "Video sent";
-            break;
-          case "audio":
-            message = "Audio sent";
-            break;
-          case "file":
-            message = `File sent: ${event.message.fileName || "Unknown"}`;
-            break;
-          case "location":
-            message = `Location: ${event.message.address}`;
-            break;
-          case "sticker":
-            message = `Sticker: ${event.message.stickerId}`;
-            break;
-          default:
-            message = "Unsupported message type";
+        case "text":
+          message = event.message.text;
+          break;
+        case "image":
+          message = "Image sent";
+          break;
+        case "video":
+          message = "Video sent";
+          break;
+        case "audio":
+          message = "Audio sent";
+          break;
+        case "file":
+          message = `File sent: ${event.message.fileName || "Unknown"}`;
+          break;
+        case "location":
+          message = `Location: ${event.message.address}`;
+          break;
+        case "sticker":
+          message = `Sticker: ${event.message.stickerId}`;
+          break;
+        default:
+          message = "Unsupported message type";
         }
 
         const displayName = await getUserDisplayName(userId);
@@ -346,7 +346,7 @@ export const lineWebhook = onRequest(async (request, response) => {
 
     response.status(200).send("OK");
   } catch (error) {
-    logger.error("Error processing LINE webhook", { error });
+    logger.error("Error processing LINE webhook", {error});
     response.status(500).send("Internal Server Error");
   }
 });
@@ -359,7 +359,7 @@ export const setupGoogleSheetHeaders = onCall(async () => {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
-    const sheets = google.sheets({ version: "v4", auth });
+    const sheets = google.sheets({version: "v4", auth});
 
     const headers = [
       [
@@ -382,9 +382,9 @@ export const setupGoogleSheetHeaders = onCall(async () => {
     });
 
     logger.info("Google Sheet headers set up successfully");
-    return { success: true, message: "Headers set up successfully" };
+    return {success: true, message: "Headers set up successfully"};
   } catch (error) {
-    logger.error("Error setting up Google Sheet headers", { error });
+    logger.error("Error setting up Google Sheet headers", {error});
     throw error;
   }
 });
